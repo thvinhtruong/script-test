@@ -35,12 +35,13 @@ func MakeCallToApi(endpoint string, cacheEnable bool, onlyOneRequest bool, numbe
 		resp, err := client.Get(endpoint)
 		if err == nil {
 			// Process the response.
-			numberOfSuccessfulRequest++
 			defer resp.Body.Close()
 			break
 		}
 		log.Printf("Error: %v. Retrying...", err)
 	}
+
+	numberOfSuccessfulRequest++
 
 	latency := time.Since(startTime).Microseconds()
 

@@ -13,9 +13,11 @@ import (
 // 3. GET multiple records for multiple times concurrently (large size)
 
 const (
-	httpRequestTest = "http://localhost:9000/api/v1/GetUserRecord/1"
-	testSize        = 50
-	threshold       = 10
+	httpRequestTest  = "http://localhost:9000/api/v1/GetUserRecord/1"
+	testSize         = 100
+	threshold        = 10
+	oneRequestEnable = false
+	cacheEnable      = true
 )
 
 func main() {
@@ -24,7 +26,7 @@ func main() {
 	// Concurrent request
 	for i := 0; i < testSize; i++ {
 		go func() {
-			err := GetUserRecordV1API_TDD(false, true, 1, threshold)
+			err := GetUserRecordV1API_TDD(oneRequestEnable, cacheEnable, 1, threshold)
 			if err != nil {
 				testChan <- true
 			} else {
