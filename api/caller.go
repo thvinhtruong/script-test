@@ -1,46 +1,83 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 )
 
-func MakeCallToApi(endpoint string, cacheEnable bool, onlyOneRequest bool) error {
-	startTime := time.Now()
-	_, err := http.Get(endpoint)
-	if err != nil {
-		log.Printf("Error when making call to API: %s", err)
-		return err
+const (
+	maxRetries = 3
+)
+
+var (
+	totalLatency              = 0
+	numberOfSuccessfulRequest = 0
+)
+
+func MakeCallToApi(endpoint string, cacheEnable bool, onlyOneRequest bool, numberOfRequest int) error {
+	// Set transport
+	transport := &http.Transport{
+		MaxIdleConns:        20,
+		MaxIdleConnsPerHost: 10000,
 	}
 
-	latency := time.Since(startTime)
+	// Set client
+	client := &http.Client{
+		Transport: transport,
+	}
 
-	//log.Printf("Latency: %s", latency)
+	startTime := time.Now()
 
-	go func() {
-		// Save log in file
-		if cacheEnable && onlyOneRequest {
-			saveLog("withCache_OnlyOneRequest", latency.String())
-		} else if cacheEnable && !onlyOneRequest {
-			saveLog("withCache-MultipleRequest", latency.String())
-		} else if !cacheEnable && onlyOneRequest {
-			saveLog("noCache_OnlyOneRequest", latency.String())
-		} else {
-			saveLog("noCache_MultipleRequest", latency.String())
+	for i := 0; i < maxRetries; i++ {
+		resp, err := client.Get(endpoint)
+		if err == nil {
+			// Process the response.
+			numberOfSuccessfulRequest++
+			defer resp.Body.Close()
+			break
 		}
-	}()
+		log.Printf("Error: %v. Retrying...", err)
+	}
+
+	latency := time.Since(startTime).Microseconds()
+
+	totalLatency += int(latency)
+	// log.Printf("Latency: %v", latency)
+
+	// Save log in file
+	// if cacheEnable && onlyOneRequest {
+	// 	SaveLog("withCache_OnlyOneRequest", fmt.Sprintf("%v", latency))
+	// } else if cacheEnable && !onlyOneRequest {
+	// 	SaveLog("withCache-MultipleRequest", fmt.Sprintf("%v", latency))
+	// } else if !cacheEnable && onlyOneRequest {
+	// 	SaveLog("noCache_OnlyOneRequest", fmt.Sprintf("%v", latency))
+	// } else {
+	// 	SaveLog("noCache_MultipleRequest", fmt.Sprintf("%v", latency))
+	// }
+
+	// Save log in file only when all requests are successful
+	if numberOfSuccessfulRequest == numberOfRequest {
+		averageLatency := totalLatency / numberOfRequest
+		if cacheEnable && onlyOneRequest {
+			SaveLog("withCache_OnlyOneRequest", fmt.Sprintf("Total latency (cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+		} else if cacheEnable && !onlyOneRequest {
+			SaveLog("withCache-MultipleRequest", fmt.Sprintf("Total latency (cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+		} else if !cacheEnable && onlyOneRequest {
+			SaveLog("noCache_OnlyOneRequest", fmt.Sprintf("Total latency (no cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+		} else {
+			SaveLog("noCache_MultipleRequest", fmt.Sprintf("Total latency (no cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+		}
+	}
 
 	return nil
 }
 
-func saveLog(name string, s ...string) {
+func SaveLog(name string, s ...string) {
 	// open file
-	var mutex sync.Mutex
-	mutex.Lock()
-	path := "./log/" + name + ".log"
+	path := "./result/" + name + ".txt"
 	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal(err)
@@ -51,5 +88,4 @@ func saveLog(name string, s ...string) {
 			panic(err)
 		}
 	}
-	mutex.Unlock()
 }

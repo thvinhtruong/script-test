@@ -1,1 +1,1 @@
-go test -bench=. -count 1 -benchmem -run=^#
+go test -bench=. -count 5 -benchmem -run=^#

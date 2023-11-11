@@ -2,9 +2,8 @@ package main
 
 import (
 	"log"
-	"net/http"
-	"os"
-	"time"
+	"poctest/api"
+	"poctest/utils"
 )
 
 // This script is to test functionality of the API of GetUserRecord v1 when applying HTTP caching and no caching
@@ -15,27 +14,62 @@ import (
 
 const (
 	httpRequestTest = "http://localhost:9000/api/v1/GetUserRecord/1"
+	testSize        = 50
+	threshold       = 10
 )
 
 func main() {
-	// Start measuring time
-	startTime := time.Now()
+	testChan := make(chan bool, testSize)
 
-	response, err := http.Get(httpRequestTest)
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
+	// Concurrent request
+	for i := 0; i < testSize; i++ {
+		go func() {
+			err := GetUserRecordV1API_TDD(false, true, 1, threshold)
+			if err != nil {
+				testChan <- true
+			} else {
+				testChan <- false
+			}
+		}()
 	}
 
-	elapsedTime := time.Since(startTime)
+	n := 0
 
-	log.Println(response)
+	// wait for all request to finish
+	for i := 0; i < testSize; i++ {
+		result := <-testChan
+		if result {
+			log.Printf("record number %v is nil", i)
+			break
+		} else {
+			n += 1
+		}
+	}
 
-	log.Println("Time for request: " + GetTimeForRequest(elapsedTime))
-
+	if n == testSize {
+		log.Printf("All %v requests are successfully", n)
+	}
 }
 
-// Calculate time from sending HTTP request to receiving response
-func GetTimeForRequest(elapsedTime time.Duration) string {
-	return elapsedTime.String()
+func GetUserRecordV1API_TDD(isOnly1Record bool, cacheEnable bool, userID int, threshold int) error {
+	configuration := api.NewAPIConfig(cacheEnable)
+
+	if isOnly1Record {
+		// random 1 user id within the test size
+		configuration.SetAPIEndpoint(utils.IntToString(userID))
+		err := api.MakeCallToApi(configuration.GetAPIEndpoint(), cacheEnable, isOnly1Record, testSize)
+		if err != nil {
+			return err
+		}
+	} else {
+		// random 10 user ids within the test size
+		requestedUserId := utils.RandomInt(1, threshold)
+		configuration.SetAPIEndpoint(utils.IntToString(requestedUserId))
+		err := api.MakeCallToApi(configuration.GetAPIEndpoint(), cacheEnable, isOnly1Record, testSize)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
