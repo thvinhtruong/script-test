@@ -1,0 +1,14 @@
+Total latency (no cache): 4789480 for 100 requests with average 47894 microsecond / request with 20 random records.
+Total latency (no cache): 19044330 for 200 requests with average 95221 microsecond / request with 20 random records.
+Total latency (no cache): 113528425 for 500 requests with average 227056 microsecond / request with 20 random records.
+Total latency (no cache): 30076250 for 1000 requests with average 30076 microsecond / request with 20 random records.
+
+Total latency (no cache): 4864180 for 100 requests with average 48641 microsecond / request with 50 random records.
+Total latency (no cache): 10548385 for 200 requests with average 52741 microsecond / request with 50 random records.
+Total latency (no cache): 14330497 for 500 requests with average 28660 microsecond / request with 50 random records.
+Total latency (no cache): 211546272 for 1000 requests with average 211546 microsecond / request with 50 random records.
+
+Total latency (no cache): 5364630 for 100 requests with average 53646 microsecond / request with 100 random records.
+Total latency (no cache): 10426364 for 200 requests with average 52131 microsecond / request with 100 random records.
+Total latency (no cache): 22656671 for 500 requests with average 45313 microsecond / request with 100 random records.
+Total latency (no cache): 7627978671 for 1000 requests with average 7627978 microsecond / request with 100 random records.Total latency (no cache): 1227627616 for 1000 requests with average 1227627 microsecond / request with 10 random records.

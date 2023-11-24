@@ -1,0 +1,5 @@
+Total latency (cache): 319841 for 50 requests with average 6396 microsecond / request.
+Total latency (cache): 1066757 for 100 requests with average 10667 microsecond / request.
+Total latency (cache): 4045517 for 200 requests with average 20227 microsecond / request.
+Total latency (cache): 57193455 for 500 requests with average 114386 microsecond / request.
+Total latency (cache): 342172418 for 1000 requests with average 342172 microsecond / request.

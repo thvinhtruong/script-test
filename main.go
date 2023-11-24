@@ -14,10 +14,10 @@ import (
 
 const (
 	httpRequestTest  = "http://localhost:9000/api/v1/GetUserRecord/1"
-	testSize         = 100
+	testSize         = 1000
 	threshold        = 10
-	oneRequestEnable = false
-	cacheEnable      = true
+	oneRequestEnable = true
+	cacheEnable      = false
 )
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 	// Concurrent request
 	for i := 0; i < testSize; i++ {
 		go func() {
-			err := GetUserRecordV1API_TDD(oneRequestEnable, cacheEnable, 1, threshold)
+			err := GetUserRecordV1API_TDD(oneRequestEnable, cacheEnable, 2, threshold)
 			if err != nil {
 				testChan <- true
 			} else {
@@ -59,7 +59,7 @@ func GetUserRecordV1API_TDD(isOnly1Record bool, cacheEnable bool, userID int, th
 	if isOnly1Record {
 		// random 1 user id within the test size
 		configuration.SetAPIEndpoint(utils.IntToString(userID))
-		err := api.MakeCallToApi(configuration.GetAPIEndpoint(), cacheEnable, isOnly1Record, testSize)
+		err := api.MakeCallToApi(configuration.GetAPIEndpoint(), cacheEnable, isOnly1Record, testSize, threshold)
 		if err != nil {
 			return err
 		}
@@ -67,7 +67,7 @@ func GetUserRecordV1API_TDD(isOnly1Record bool, cacheEnable bool, userID int, th
 		// random 10 user ids within the test size
 		requestedUserId := utils.RandomInt(1, threshold)
 		configuration.SetAPIEndpoint(utils.IntToString(requestedUserId))
-		err := api.MakeCallToApi(configuration.GetAPIEndpoint(), cacheEnable, isOnly1Record, testSize)
+		err := api.MakeCallToApi(configuration.GetAPIEndpoint(), cacheEnable, isOnly1Record, testSize, threshold)
 		if err != nil {
 			return err
 		}

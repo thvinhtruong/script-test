@@ -17,7 +17,7 @@ var (
 	numberOfSuccessfulRequest = 0
 )
 
-func MakeCallToApi(endpoint string, cacheEnable bool, onlyOneRequest bool, numberOfRequest int) error {
+func MakeCallToApi(endpoint string, cacheEnable bool, onlyOneRequest bool, numberOfRequest int, threshold int) error {
 	// Set transport
 	transport := &http.Transport{
 		MaxIdleConns:        20,
@@ -33,6 +33,7 @@ func MakeCallToApi(endpoint string, cacheEnable bool, onlyOneRequest bool, numbe
 
 	for i := 0; i < maxRetries; i++ {
 		resp, err := client.Get(endpoint)
+		numberOfSuccessfulRequest++
 		if err == nil {
 			// Process the response.
 			defer resp.Body.Close()
@@ -41,35 +42,36 @@ func MakeCallToApi(endpoint string, cacheEnable bool, onlyOneRequest bool, numbe
 		log.Printf("Error: %v. Retrying...", err)
 	}
 
-	numberOfSuccessfulRequest++
-
 	latency := time.Since(startTime).Microseconds()
 
 	totalLatency += int(latency)
 	// log.Printf("Latency: %v", latency)
 
-	// Save log in file
-	// if cacheEnable && onlyOneRequest {
-	// 	SaveLog("withCache_OnlyOneRequest", fmt.Sprintf("%v", latency))
-	// } else if cacheEnable && !onlyOneRequest {
-	// 	SaveLog("withCache-MultipleRequest", fmt.Sprintf("%v", latency))
-	// } else if !cacheEnable && onlyOneRequest {
-	// 	SaveLog("noCache_OnlyOneRequest", fmt.Sprintf("%v", latency))
-	// } else {
-	// 	SaveLog("noCache_MultipleRequest", fmt.Sprintf("%v", latency))
+	// Save log in file only when all requests are successful
+	// if numberOfSuccessfulRequest == numberOfRequest {
+	// 	averageLatency := totalLatency / numberOfRequest
+	// 	if cacheEnable && onlyOneRequest {
+	// 		SaveLog("withCache_OnlyOneRequest", fmt.Sprintf("Total latency (cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+	// 	} else if cacheEnable && !onlyOneRequest {
+	// 		SaveLog("withCache-MultipleRequest", fmt.Sprintf("Total latency (cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+	// 	} else if !cacheEnable && onlyOneRequest {
+	// 		SaveLog("noCache_OnlyOneRequest", fmt.Sprintf("Total latency (no cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+	// 	} else {
+	// 		SaveLog("noCache_MultipleRequest", fmt.Sprintf("Total latency (no cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+	// 	}
 	// }
 
 	// Save log in file only when all requests are successful
 	if numberOfSuccessfulRequest == numberOfRequest {
 		averageLatency := totalLatency / numberOfRequest
 		if cacheEnable && onlyOneRequest {
-			SaveLog("withCache_OnlyOneRequest", fmt.Sprintf("Total latency (cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+			SaveLog("withCache_oneRecord", fmt.Sprintf("Total latency (cache): %v for %v requests with average %v microsecond / request with %v random records.", totalLatency, numberOfRequest, averageLatency, threshold))
 		} else if cacheEnable && !onlyOneRequest {
-			SaveLog("withCache-MultipleRequest", fmt.Sprintf("Total latency (cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+			SaveLog("withCache-multipleRecord", fmt.Sprintf("Total latency (cache): %v for %v requests with average %v microsecond / request with %v random records.", totalLatency, numberOfRequest, averageLatency, threshold))
 		} else if !cacheEnable && onlyOneRequest {
-			SaveLog("noCache_OnlyOneRequest", fmt.Sprintf("Total latency (no cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+			SaveLog("noCache_oneRecord", fmt.Sprintf("Total latency (no cache): %v for %v requests with average %v microsecond / request with %v random records.", totalLatency, numberOfRequest, averageLatency, threshold))
 		} else {
-			SaveLog("noCache_MultipleRequest", fmt.Sprintf("Total latency (no cache): %v for %v requests with average %v microsecond / request.", totalLatency, numberOfRequest, averageLatency))
+			SaveLog("noCache_multipleRecord", fmt.Sprintf("Total latency (no cache): %v for %v requests with average %v microsecond / request with %v random records.", totalLatency, numberOfRequest, averageLatency, threshold))
 		}
 	}
 
